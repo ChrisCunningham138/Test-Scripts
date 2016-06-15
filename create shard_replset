@@ -1,0 +1,68 @@
+sudo mkdir -p /data/db/local_replset/mongodb/shard_replset-0 /data/db/local_replset/mongodb/shard_replset-1 /data/db/local_replset/mongodb/shard_replset-2
+# make the data directories
+
+sudo chown 777 -R /data/db/local_replset/mongodb/shard_replset-0 /data/db/local_replset/mongodb/shard_replset-1 /data/db/local_replset/mongodb/shard_replset-2
+# change the ownership of the data directories
+
+sudo mkdir -p /data/db/local_replset/mongodb/shard_replset-0-logs /data/db/local_replset/mongodb/shard_replset-1-logs /data/db/local_replset/mongodb/shard_replset-2-logs
+# make the log directories
+
+sudo chown 777 -R /data/db/local_replset/mongodb/shard_replset-0-logs /data/db/local_replset/mongodb/shard_replset-1-logs /data/db/local_replset/mongodb/shard_replset-2-logs
+# change the ownership of the log directories
+
+sudo mongod --port 33017 --replSet Chris_local_shard_replset --dbpath /data/db/local_replset/mongodb/shard_replset-0 --logpath /data/db/local_replset/mongodb/shard_replset-0-logs/log0.log --fork
+# start the PRIMARY
+
+sudo mongod --port 33018 --replSet Chris_local_shard_replset --dbpath /data/db/local_replset/mongodb/shard_replset-1 --logpath /data/db/local_replset/mongodb/shard_replset-1-logs/log1.log --fork
+# start the SECONDARY
+
+sudo mongod --port 33019 --replSet Chris_local_shard_replset --dbpath /data/db/local_replset/mongodb/shard_replset-2 --logpath /data/db/local_replset/mongodb/shard_replset-2-logs/log2.log --fork
+# start the next SECONDARY
+
+ps -ef | grep "Chris_local_shard_replset"
+# check to see that everything is running
+
+sudo mongo --port 33017
+# connect to the PRIMARY instance
+
+rsconfig = {
+           _id: "Chris_local_shard_replset",
+           members: [
+                      {
+                       _id: 0,
+                       host: "Ubuntu_Test_Server:33017"
+                      }
+                    ]
+         }
+
+rs.initiate(rsconfig)
+# this should assign PRIMARY of the replset to my local host on port 33017
+# and return with { "ok" : 1 }
+
+
+rs.conf()
+# this should show just the PRIMARY sitting by itself
+
+rs.add("Ubuntu_Test_Server:33018")
+rs.add("Ubuntu_Test_Server:33019")
+# this should add these hosts to the replset
+
+rs.status()
+# this should show a replica set working
+
+
+
+
+
+#now add a new member to the sharded replset
+
+sudo mkdir -p /data/db/local_replset/mongodb/shard_replset-3 
+sudo chown 777 -R /data/db/local_replset/mongodb/shard_replset-3 
+
+sudo mkdir -p /data/db/local_replset/mongodb/shard_replset-3-logs 
+sudo chown 777 -R /data/db/local_replset/mongodb/shard_replset-3-logs
+sudo mongod --port 33033 --replSet Chris_local_shard_replset --dbpath /data/db/local_replset/mongodb/shard_replset-3 --logpath /data/db/local_replset/mongodb/shard_replset-3-logs/log3.log --fork
+sudo mongo --port 33017
+rs.add("Ubuntu_Test_Server:33033")
+rs.status()
+
