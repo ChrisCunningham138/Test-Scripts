@@ -1,0 +1,75 @@
+# create the authdb directories:
+
+mkdir -p /data/db/authdb /data/db/authdb/logs
+
+# start without auth enabled:
+
+mongod --port 21000 --dbpath /data/db/authdb --logpath /data/db/authdb/logs/log1.log --fork
+
+# connect to it
+
+mongo --port 21000
+
+# create the admin user:
+
+use admin
+db.createUser(
+  {
+    user: "myUserAdmin",
+    pwd: "abc123",
+    roles: [ { role: "userAdminAnyDatabase", db: "admin" } ]
+  }
+)
+
+exit
+
+########## kill the mongod running on 21000 ############
+
+# restart the mongod with auth enabled:
+
+mongod --auth --port 21000 --dbpath /data/db/authdb --logpath /data/db/authdb/logs/log1.log --fork
+
+# connect as the admin user:
+
+mongo --port 21000 -u "myUserAdmin" -p "abc123" --authenticationDatabase "admin"
+
+
+# create 2 users, one with dbAdmin and the other without
+
+use ChrisOnly
+db.createUser(
+  {
+    user: "Chris",
+    pwd: "12345678",
+    roles: [
+       { role: "readWrite", db: "ChrisOnly" },
+       { role: "dbAdmin", db: "ChrisOnly" }
+]
+  }
+)
+
+use BinkyOnly
+db.createUser(
+  {
+    user: "Binky",
+    pwd: "12345678",
+    roles: [
+       { role: "readWrite", db: "BinkyOnly" },
+]
+  }
+)
+
+# connect as dbAdmin user Chris and try to write to BinkyOnly:
+
+mongo --port 27000 -u Chris -p 12345678 --authenticationDatabase ChrisOnly
+
+db.BinkyOnly.insert( { item: "baloons", qty: 99 } )
+db.BinkyOnly.find()
+exit
+
+# connect as non-dbAdmin user Binky and try to write to ChrisOnly:
+
+mongo --port 27000 -u Binky -p 12345678 --authenticationDatabase BinkyOnly
+
+db.ChrisOnly.insert( { item: "baloons", qty: 99 } )
+db.ChrisOnly.find()
