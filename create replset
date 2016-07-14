@@ -1,51 +1,28 @@
 mkdir -p /data/db/local_replset/rs0-0 /data/db/local_replset/rs0-1 /data/db/local_replset/rs0-2
-# make the data directories
-
-#chown 777 -R /data/db/local_replset/rs0-0 /data/db/local_replset/rs0-1 /data/db/local_replset/rs0-2
-# change the ownership of the data directories
-
 mkdir -p /data/db/local_replset/rs0-0-logs /data/db/local_replset/rs0-1-logs /data/db/local_replset/rs0-2-logs
-# make the log directories
-
-#chown 777 -R /data/db/local_replset/rs0-0-logs /data/db/local_replset/rs0-1-logs /data/db/local_replset/rs0-2-logs
-# change the ownership of the log directories
-
-mongod --port 20000 --replSet local_replset --dbpath /data/db/local_replset/rs0-0 --logpath /data/db/local_replset/rs0-0-logs/log0.log --fork
-# start the PRIMARY
-
-mongod --port 20001 --replSet local_replset --dbpath /data/db/local_replset/rs0-1 --logpath /data/db/local_replset/rs0-1-logs/log1.log --fork
-# start the SECONDARY
-
-mongod --port 20002 --replSet local_replset --dbpath /data/db/local_replset/rs0-2 --logpath /data/db/local_replset/rs0-2-logs/log2.log --fork
-# start the next SECONDARY
-
-ps -ef | grep "local_replset"
-# check to see that everything is running
-
-mongo --port 20000
-# connect to the PRIMARY instance
-
+mongod --port 28017 --replSet local_replset --dbpath /data/db/local_replset/rs0-0 --logpath /data/db/local_replset/rs0-0-logs/log0.log --fork
+mongod --port 28018 --replSet local_replset --dbpath /data/db/local_replset/rs0-1 --logpath /data/db/local_replset/rs0-1-logs/log1.log --fork
+mongod --port 28019 --replSet local_replset --dbpath /data/db/local_replset/rs0-2 --logpath /data/db/local_replset/rs0-2-logs/log2.log --fork
+mongo --port 28017
 rsconfig = {
            _id: "local_replset",
            members: [
                       {
                        _id: 0,
-                       host: "ubuntu:20000"
+                       host: "ChrisCunninghams-MacBook-Pro.local:28017"
                       }
                     ]
          }
 
 rs.initiate(rsconfig)
-# this should assign PRIMARY of the replset to my local host on port 20000
+# this should assign PRIMARY of the replset to my local host on port 28017
 # and return with { "ok" : 1 }
 
 
 rs.conf()
 # this should show just the PRIMARY sitting by itself
 
-rs.add("ubuntu:20001")
-rs.add("ubuntu:20002")
-# this should add these hosts to the replset
-
+rs.add("ChrisCunninghams-MacBook-Pro.local:28018")
+rs.add("ChrisCunninghams-MacBook-Pro.local:28019")
 rs.status()
 # this should show a replica set working
