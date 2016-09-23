@@ -1,9 +1,0 @@
-# drop the collection if they already exist
-use test
-db.date_test.drop()
-
-# create the sample data
-for (i = 0; i < 1000; i++) {db.date_test.insert({counter:i, string:"this is a test_string", date:ISODate()});}
-
-db.date_test.createIndex({counter: 1,date:1}, {background:true, unique:true})
-
